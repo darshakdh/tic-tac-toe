@@ -83,10 +83,16 @@ export default function Game() {
   const moves = history.map((squares, move) => {
     let description;
     const isCurrentMove = move === currentMove;
+    const location =
+      move > 0 ? getMoveLocation(history[move - 1], squares) : null;
+    const locationText = location
+      ? ` (row ${location.row}, col ${location.col})`
+      : "";
+
     if (isCurrentMove) {
-      description = "You are at move #" + move;
+      description = "You are at move #" + move + locationText;
     } else if (move > 0) {
-      description = "Go to move #" + move;
+      description = "Go to move #" + move + locationText;
     } else {
       description = "Go to game start";
     }
@@ -116,13 +122,32 @@ export default function Game() {
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+        <Board
+          xIsNext={xIsNext}
+          squares={currentSquares}
+          onPlay={handlePlay}
+          currentMove={currentMove}
+          historyLength={history.length}
+        />
       </div>
       <div className="game-info">
         <ol>{moves}</ol>
       </div>
     </div>
   );
+}
+
+function getMoveLocation(previousSquares, nextSquares) {
+  const index = nextSquares.findIndex(
+    (square, i) => square.value !== previousSquares[i].value
+  );
+  if (index === -1) {
+    return null;
+  }
+  return {
+    row: Math.floor(index / 3) + 1,
+    col: (index % 3) + 1,
+  };
 }
 
 function calculateWinner(squares) {

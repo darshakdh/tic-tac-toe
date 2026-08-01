@@ -1,15 +1,24 @@
 import React, { useState } from "react";
 
-function Square({ value, onSquareClick }) {
+function createEmptySquares() {
+  return Array(9)
+    .fill(null)
+    .map(() => ({ value: null, isPartOfWinningLine: null }));
+}
+
+function Square({ value, isPartOfWinningLine, onSquareClick }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button
+      className={"square" + (isPartOfWinningLine ? " winning" : "")}
+      onClick={onSquareClick}
+    >
       {value}
     </button>
   );
 }
 
 function Board({ xIsNext, squares, onPlay }) {
-  const winner = calculateWinner(squares);
+  const winner = squares.find((square) => square.isPartOfWinningLine)?.value;
   let status;
   if (winner) {
     status = "Winner: " + winner;
@@ -18,15 +27,15 @@ function Board({ xIsNext, squares, onPlay }) {
   }
 
   const handleClick = (i) => {
-    if (squares[i] || calculateWinner(squares)) {
+    if (squares[i].value || winner) {
       return;
     }
-    const nextSquares = squares.slice();
-    if (xIsNext) {
-      nextSquares[i] = "X";
-    } else {
-      nextSquares[i] = "O";
-    }
+    const nextSquares = squares.map((square) => ({ ...square }));
+    nextSquares[i] = {
+      ...nextSquares[i],
+      value: xIsNext ? "X" : "O",
+    };
+    calculateWinner(nextSquares);
     onPlay(nextSquares);
   };
   const boardRow = Array(3)
@@ -40,7 +49,8 @@ function Board({ xIsNext, squares, onPlay }) {
             return (
               <Square
                 key={squareIndex}
-                value={squares[squareIndex]}
+                value={squares[squareIndex].value}
+                isPartOfWinningLine={squares[squareIndex].isPartOfWinningLine}
                 onSquareClick={() => handleClick(squareIndex)}
               />
             );
@@ -56,7 +66,7 @@ function Board({ xIsNext, squares, onPlay }) {
 }
 
 export default function Game() {
-  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [history, setHistory] = useState([createEmptySquares()]);
   const [currentMove, setCurrentMove] = useState(0);
 
   const xIsNext = currentMove % 2 === 0;
@@ -124,8 +134,15 @@ function calculateWinner(squares) {
   ];
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+    if (
+      squares[a].value &&
+      squares[a].value === squares[b].value &&
+      squares[a].value === squares[c].value
+    ) {
+      squares[a] = { ...squares[a], isPartOfWinningLine: true };
+      squares[b] = { ...squares[b], isPartOfWinningLine: true };
+      squares[c] = { ...squares[c], isPartOfWinningLine: true };
+      return squares[a].value;
     }
   }
   return null;

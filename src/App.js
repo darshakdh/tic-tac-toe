@@ -17,11 +17,15 @@ function Square({ value, isPartOfWinningLine, onSquareClick }) {
   );
 }
 
-function Board({ xIsNext, squares, onPlay }) {
+function Board({ xIsNext, squares, onPlay, currentMove, historyLength }) {
   const winner = squares.find((square) => square.isPartOfWinningLine)?.value;
+  const isDraw =
+    !winner && currentMove === historyLength - 1 && historyLength === 10;
   let status;
   if (winner) {
     status = "Winner: " + winner;
+  } else if (isDraw) {
+    status = "Draw";
   } else {
     status = "Next player: " + (xIsNext ? "X" : "O");
   }
